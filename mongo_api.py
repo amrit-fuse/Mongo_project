@@ -37,14 +37,18 @@ def insert_one():
     db = client['Hospital']
     collection = db['Patients']
 
-    # read json raw
-    data = request.get_json()
+    try:
+        # read json raw
+        data = request.get_json()
+    except Exception as e:
+        return jsonify({"message": "Error parsing json  confirm that Body  is not empty and each parameters  have double quotes"}, {"additional info": e.args})
 
-    # insert data
-    result = collection.insert_one(data)
-
-    inserted_id = parse_json(result.inserted_id)
-    return jsonify(inserted_id)
+    try:
+        # insert data
+        result = collection.insert_one(data)
+        return jsonify({"message": "inserted successfully", "inserted id": str(result.inserted_id)})
+    except Exception as e:
+        return jsonify({"message": "error", "Info": e.args})
 
 
 # Insert multiple documents into the collection
@@ -56,26 +60,39 @@ def insert_many():
 
     json_patient = csv_to_json('patients.csv')
 
-    # insert json data into collection
-    result = collection.insert_many(json_patient)
+    try:
+        # insert json data into collection
+        result = collection.insert_many(json_patient)
 
-    inserted_ids = parse_json(result.inserted_ids)
-    return jsonify(inserted_ids)
+        # count number of documents inserted
+        count = len(result.inserted_ids)
+
+        # inserted_ids = parse_json(result.inserted_ids)
+        return jsonify({"message": "inserted successfully", "Count": count, "inserted ids": parse_json(result.inserted_ids)})
+
+    except Exception as e:
+        return jsonify({"message": "error", "Info": e.args})
+
 
 # find one document
-
-
 @app.route('/find_one', methods=['GET'])
 def find_one():
     # reference  database and collection  # if dont exist, it will be created
     db = client['Hospital']
     collection = db['Patients']
 
-    document_to_find = request.get_json()
-    # find one document
-    result = collection.find_one(document_to_find)
-
-    return jsonify(parse_json(result))
+    try:
+        document_to_find = request.get_json()
+    except Exception as e:
+        return jsonify({"message": "Error parsing json  confirm that Body is not empty and each parameters  have double quotes"}, {"additional info": e.args})
+    try:
+        result = collection.find_one(document_to_find)
+        # if document is not found, return message
+        if result is None:
+            return jsonify({"message": "Document not found for " + str(document_to_find)})
+        return jsonify({"message": "Found successfully", "result": parse_json(result)})
+    except Exception as e:
+        return jsonify({"message": "error", "Info": e.args})
 
 
 # find one document
@@ -85,15 +102,24 @@ def find_all():
     db = client['Hospital']
     collection = db['Patients']
 
-    documents_to_find = request.get_json()
+    try:
+        documents_to_find = request.get_json()
+    except Exception as e:
+        return jsonify({"message": "Error parsing json  confirm that Body is not empty and each parameters  have double quotes"}, {"additional info": e.args})
+    try:
+        # find all document
+        result = collection.find(documents_to_find)
+        # if document is not found, return message
+        if result is None:
+            return jsonify({"message": "Document not found for " + str(documents_to_find)})
 
-    # find all document
-    result = collection.find(documents_to_find)
+        return jsonify({"message": "Found successfully", "result": parse_json(result)})
 
-    return jsonify(parse_json(result))
+    except Exception as e:
+        return jsonify({"message": "error", "Info": e.args})
+
 
 # update one document
-
 
 @app.route('/update_one', methods=['PUT'])
 def update_one():
@@ -101,13 +127,24 @@ def update_one():
     db = client['Hospital']
     collection = db['Patients']
 
-    document_to_find = request.get_json()  # unique _id to identify documnent
-    update_operation = {"$set": {"patient_name": "Baburo Mastani"}}
+    try:
+        document_to_find = request.get_json()
+    except Exception as e:
+        return jsonify({"message": "Error parsing json  confirm that Body is not empty and each parameters  have double quotes"}, {"additional info": e.args})
 
-    # update one document
-    result = collection.update_one(document_to_find, update_operation)
+    try:
+        update_operation = {"$set": {"patient_name": "Baburo Mastani"}}
 
-    return jsonify(parse_json(result.raw_result))
+        # update one document
+        result = collection.update_one(document_to_find, update_operation)
+
+        # if document is not found, return message
+        if result.modified_count == 0:
+            return jsonify({"message": "Document not found for " + str(document_to_find)})
+
+        return jsonify({"message": "Updated successfully", "result": parse_json(result.raw_result)})
+    except Exception as e:
+        return jsonify({"message": "error", "Info": e.args})
 
 
 # update many document
@@ -117,12 +154,24 @@ def update_many():
     db = client['Hospital']
     collection = db['Patients']
 
-    document_to_find = request.get_json()
-    update_operation = {"$set": {"patient_city": "Sindupalchowk"}}
+    try:
+        document_to_find = request.get_json()
+    except Exception as e:
+        return jsonify({"message": "Error parsing json  confirm that Body is not empty and each parameters  have double quotes"}, {"additional info": e.args})
 
-    # update many document
-    result = collection.update_many(document_to_find, update_operation)
-    return jsonify(parse_json(result.raw_result))
+    try:
+        update_operation = {"$set": {"patient_city": "Sindupalchowk"}}
+
+        # update many document
+        result = collection.update_many(document_to_find, update_operation)
+
+        # if document is not found, return message
+        if result.modified_count == 0:
+            return jsonify({"message": "Document not found for " + str(document_to_find)})
+
+        return jsonify({"message": "Updated successfully", "result": parse_json(result.raw_result), "Modified count": result.modified_count})
+    except Exception as e:
+        return jsonify({"message": "error", "Info": e.args})
 
 # delete one document
 
@@ -133,11 +182,22 @@ def delete_one():
     db = client['Hospital']
     collection = db['Patients']
 
-    document_to_find = request.get_json()
+    try:
+        document_to_find = request.get_json()
+    except Exception as e:
+        return jsonify({"message": "Error parsing json  confirm that Body is not empty and each parameters  have double quotes"}, {"additional info": e.args})
 
-    # delete one document
-    result = collection.delete_one(document_to_find)
-    return jsonify(parse_json(result.raw_result))
+    try:
+        # delete one document
+        result = collection.delete_one(document_to_find)
+
+        # if document is not found, return message
+        if result.deleted_count == 0:
+            return jsonify({"message": "Document not found for " + str(document_to_find)})
+
+        return jsonify({"message": "Deleted successfully", "result": parse_json(result.raw_result)})
+    except Exception as e:
+        return jsonify({"message": "error", "Info": e.args})
 
 
 # delete many document
@@ -147,11 +207,29 @@ def delete_many():
     db = client['Hospital']
     collection = db['Patients']
 
-    document_to_find = request.get_json()
+    try:
+        document_to_find = request.get_json()
 
-    # delete many document
-    result = collection.delete_many(document_to_find)
-    return jsonify(parse_json(result.raw_result))
+    except Exception as e:
+        return jsonify({"message": "Error parsing json  confirm that Body is not empty and each parameters  have double quotes"}, {"additional info": e.args})
+
+    # extract dob from json
+    dob = document_to_find['patient_dob']
+
+    # edit json to delete all documents  dob greater than given dob
+    document_to_find_updated = {"patient_dob": {"$gt": dob}}
+
+    try:
+        # delete many document
+        result = collection.delete_many(document_to_find_updated)
+
+        # if document is not found, return message
+        if result.deleted_count == 0:
+            return jsonify({"message": "Document not found for " + str(document_to_find)})
+
+        return jsonify({"message": "Deleted successfully", "result": parse_json(result.raw_result), "Deleted count": result.deleted_count})
+    except Exception as e:
+        return jsonify({"message": "error", "Info": e.args})
 
 
 if __name__ == '__main__':

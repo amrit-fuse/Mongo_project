@@ -227,7 +227,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "\r\n{\"patient_dob\":{\"$gt\":\"1990\"}}",
+					"raw": "\r\n{\"patient_dob\":\"1990\"} ",
 					"options": {
 						"raw": {
 							"language": "json"
