@@ -10,6 +10,9 @@ This is a sole project done during my traineeship at Fusemachines Nepal. This pr
 
 Use `pip install -r requirements.txt` to install the required packages.
 
+## Import Postman config
+ Use file *Mongo Project.postman_collection.json* to import the config
+
 ## Input format
 + Raw json in body part of url ( Recommened  to use postman )
   
